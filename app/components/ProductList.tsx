@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
 
 type Tag = {
   id: number;
@@ -431,15 +432,18 @@ let filtered = (products as Product[]).filter((p: Product) => {
                       </span>
                     ))}
                   </div>
-                  <button className="mt-4 w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white text-sm font-semibold py-2 rounded-xl hover:from-blue-600 hover:to-purple-600 transition-all duration-200">
+                    <button className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-sm font-semibold py-2 rounded-xl hover:from-blue-600 hover:to-purple-600 transition-all duration-200">
                     Vezi detalii →
-                  </button>
+                    </button>
+                    
+                    <Link href={`/products/edit-product/${product.id}`} className="px-3 py-2 rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 hover:border-gray-300 transition-all text-sm" title="Editează">
+                    <span>✏️</span>
+                </Link>
                 </div>
               </div>
             ))}
           </div>
         )}
-
         {totalPages > 1 && (
           <div className="flex items-center justify-center gap-2 mt-8">
             <button
