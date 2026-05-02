@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 type Tag = {
   id: number;
@@ -109,16 +110,49 @@ function CategoryItem({
   );
 }
 
-export default function ProductList({
-  products,
-  categories,
-}: {
-  products: Product[];
-  categories: Category[];
-}) {
+export default function ProductList() {
+  const { data: products = [], isLoading: loadingProducts } = useQuery({
+    queryKey: ["products"],
+    queryFn: () => fetch("/api/products").then((r) => r.json()),
+  });
+
+  const { data: categories = [], isLoading: loadingCategories } = useQuery({
+    queryKey: ["categories"],
+    queryFn: () => fetch("/api/categories").then((r) => r.json()),
+  });
+
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("default");
+  const [selectedTags, setSelectedTags] = useState<number[]>([]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 0]);
+  const [initialized, setInitialized] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const PRODUCTS_PER_PAGE = 9;
+
+  const minPrice = products.length > 0 ? Math.floor(Math.min(...products.map((p: Product) => p.price))) : 0;
+  const maxPrice = products.length > 0 ? Math.ceil(Math.max(...products.map((p: Product) => p.price))) : 0;
+
+  if (!initialized && products.length > 0) {
+    setPriceRange([minPrice, maxPrice]);
+    setInitialized(true);
+  }
+
+  if (loadingProducts || loadingCategories) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-500 text-sm">Se încarcă produsele...</p>
+        </div>
+      </div>
+    );
+  }
+  const allTags = Array.from(
+  new Map((products as Product[]).flatMap((p: Product) => p.tags).map((t: Tag) => [t.id, t])).values()
+  
+);
+
 
   const tree = buildTree(categories);
 
@@ -144,22 +178,27 @@ export default function ProductList({
     ? getAllChildIds(selectedCategory, categories)
     : null;
 
-  let filtered = products.filter((p) => {
-    const matchCategory = categoryIds ? categoryIds.includes(p.categoryId) : true;
-    const normalize = (str: string) =>
-     str.toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+let filtered = (products as Product[]).filter((p: Product) => {
+  const matchCategory = categoryIds ? categoryIds.includes(p.categoryId) : true;
+  const normalize = (str: string) =>
+    str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const matchSearch = normalize(p.name).includes(normalize(search));
+  const matchTags =
+    selectedTags.length === 0 ||
+    selectedTags.every((tagId) => p.tags.some((t) => t.id === tagId));
+  const matchPrice = p.price >= priceRange[0] && p.price <= priceRange[1];
+  return matchCategory && matchSearch && matchTags && matchPrice;
+});
 
-const matchSearch = normalize(p.name).includes(normalize(search));
-    return matchCategory && matchSearch;
-  });
-
-  if (sortBy === "price-asc") filtered = [...filtered].sort((a, b) => a.price - b.price);
-  if (sortBy === "price-desc") filtered = [...filtered].sort((a, b) => b.price - a.price);
-  if (sortBy === "name-asc") filtered = [...filtered].sort((a, b) => a.name.localeCompare(b.name));
-  if (sortBy === "name-desc") filtered = [...filtered].sort((a, b) => b.name.localeCompare(a.name));
-
+  if (sortBy === "price-asc") filtered = [...filtered].sort((a: Product, b: Product) => a.price - b.price);
+  if (sortBy === "price-desc") filtered = [...filtered].sort((a: Product, b: Product) => b.price - a.price);
+  if (sortBy === "name-asc") filtered = [...filtered].sort((a: Product, b: Product) => a.name.localeCompare(b.name));
+  if (sortBy === "name-desc") filtered = [...filtered].sort((a: Product, b: Product) => b.name.localeCompare(a.name));
+  const totalPages = Math.ceil(filtered.length / PRODUCTS_PER_PAGE);
+  const paginated = filtered.slice(
+  (currentPage - 1) * PRODUCTS_PER_PAGE,
+  currentPage * PRODUCTS_PER_PAGE
+);
   return (
     <div className="flex gap-6">
       {/* Sidebar categorii */}
@@ -174,7 +213,7 @@ const matchSearch = normalize(p.name).includes(normalize(search));
                 ? "bg-blue-500 text-white font-semibold"
                 : "text-gray-700 hover:bg-blue-50"
             }`}
-            onClick={() => setSelectedCategory(null)}
+            onClick={() => { setSelectedCategory(null); setCurrentPage(1); }}
           >
             Toate produsele
           </div>
@@ -183,10 +222,140 @@ const matchSearch = normalize(p.name).includes(normalize(search));
               key={cat.id}
               category={cat}
               selectedId={selectedCategory}
-              onSelect={setSelectedCategory}
+              onSelect={(id) => { setSelectedCategory(id); setCurrentPage(1); }}
               depth={0}
             />
           ))}
+         <div className="mt-4">
+  <h3 className="font-bold text-gray-800 mb-3 text-sm uppercase tracking-wide">
+    Preț
+  </h3>
+  <div className="flex gap-2 mb-3">
+    <div className="flex-1">
+      <label className="text-xs text-gray-500 mb-1 block">Min (RON)</label>
+      <input
+        type="number"
+        value={priceRange[0]}
+        min={minPrice}
+        max={priceRange[1]}
+        onChange={(e) => {
+    const val = Math.min(Math.max(Number(e.target.value), minPrice), priceRange[1]);
+  setPriceRange([val, priceRange[1]]);
+  setCurrentPage(1);
+  }}
+         onKeyDown={(e) => {
+    const current = Number((e.target as HTMLInputElement).value);
+    if (e.key >= "0" && e.key <= "9" && current >= priceRange[1]) {
+      e.preventDefault();
+    }
+  }}
+        className="w-full border border-gray-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+      />
+    </div>
+    <div className="flex-1">
+      <label className="text-xs text-gray-500 mb-1 block">Max (RON)</label>
+      <input
+        type="number"
+        value={priceRange[1]}
+        min={priceRange[0]}
+        max={maxPrice}
+        onChange={(e) => {
+          const val = Number(e.target.value);
+          if (val >= priceRange[0]) setPriceRange([priceRange[0], val]);
+          setCurrentPage(1);
+        }}
+         onKeyDown={(e) => {
+    const current = Number((e.target as HTMLInputElement).value);
+    if (e.key >= "0" && e.key <= "9" && current >= maxPrice) {
+      e.preventDefault();
+    }
+  }}
+        className="w-full border border-gray-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+      />
+    </div>
+  </div>
+  <div className="relative h-6 flex items-center">
+    <div className="absolute w-full h-1 bg-gray-200 rounded"></div>
+    <div
+      className="absolute h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded"
+      style={{
+        left: `${((priceRange[0] - minPrice) / (maxPrice - minPrice)) * 100}%`,
+        right: `${100 - ((priceRange[1] - minPrice) / (maxPrice - minPrice)) * 100}%`,
+      }}
+    ></div>
+    <input
+      type="range"
+      min={minPrice}
+      max={maxPrice}
+      value={priceRange[0]}
+       onChange={(e) => {
+    const val = Math.min(Math.max(Number(e.target.value), minPrice), priceRange[1]);
+    setPriceRange([val, priceRange[1]]);
+    setCurrentPage(1);
+  }}
+  onBlur={(e) => {
+    const val = Math.min(Math.max(Number(e.target.value), minPrice), priceRange[1]);
+    setPriceRange([val, priceRange[1]]);
+  }}
+      className="absolute w-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-500 [&::-webkit-slider-thumb]:cursor-pointer"
+    />
+    <input
+      type="range"
+      min={minPrice}    
+      max={maxPrice}
+      value={priceRange[1]}
+      onChange={(e) => {
+    const val = Math.max(Math.min(Number(e.target.value), maxPrice), priceRange[0]);
+    setPriceRange([priceRange[0], val]);
+    setCurrentPage(1);
+  }}
+  onBlur={(e) => {
+    const val = Math.max(Math.min(Number(e.target.value), maxPrice), priceRange[0]);
+    setPriceRange([priceRange[0], val]);
+  }}
+      className="absolute w-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-purple-500 [&::-webkit-slider-thumb]:cursor-pointer"
+    />
+  </div>
+  <div className="flex justify-between text-xs text-gray-400 mt-2">
+    <span>{minPrice.toLocaleString("ro-RO")} RON</span>
+    <span>{maxPrice.toLocaleString("ro-RO")} RON</span>
+  </div>
+  <button
+    onClick={() => { setPriceRange([minPrice, maxPrice]); setCurrentPage(1); }}
+    className="text-xs text-blue-500 hover:underline mt-2 block"
+  >
+    Reset preț
+  </button>
+</div>
+        {allTags.length > 0 && (
+            <div className="mt-4">
+              <h3 className="font-bold text-gray-800 mb-3 text-sm uppercase tracking-wide">
+                Taguri
+              </h3>
+              <div className="flex flex-col gap-1">
+                {(allTags as Tag[]).map((tag: Tag) => (
+                  <label key={tag.id} className="flex items-center gap-2 cursor-pointer text-sm text-gray-700 hover:text-blue-600">
+                    <input
+                      type="checkbox"
+                      checked={selectedTags.includes(tag.id)}
+                      onChange={() => {
+                        setSelectedTags((prev) =>{
+                          setCurrentPage(1);
+                          return prev.includes(tag.id)
+                            ? prev.filter((id) => id !== tag.id)
+                            : [...prev, tag.id]
+                      });
+                      }}
+                      className="accent-blue-500"
+                    />
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${tagColors[tag.name] || "bg-gray-100 text-gray-600"}`}>
+                      {tag.name}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </aside>
 
@@ -198,12 +367,12 @@ const matchSearch = normalize(p.name).includes(normalize(search));
             type="text"
             placeholder="Caută produse..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
             className="flex-1 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
           />
           <select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
+            onChange={(e) => { setSortBy(e.target.value); setCurrentPage(1); }}
             className="border border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
           >
             <option value="default">Sortare implicită</option>
@@ -220,7 +389,7 @@ const matchSearch = normalize(p.name).includes(normalize(search));
           <p className="text-gray-500">Nu există produse pentru această selecție.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filtered.map((product) => (
+            {paginated.map((product) => (
               <div
                 key={product.id}
                 className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 hover:-translate-y-1"
@@ -268,6 +437,38 @@ const matchSearch = normalize(p.name).includes(normalize(search));
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 mt-8">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+              disabled={currentPage === 1}
+              className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-blue-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            >
+              ← Înapoi
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={`w-9 h-9 rounded-xl text-sm font-medium transition-all ${
+                  currentPage === page
+                    ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white"
+                    : "border border-gray-200 text-gray-600 hover:bg-blue-50"
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-blue-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            >
+              Înainte →
+            </button>
           </div>
         )}
       </div>
