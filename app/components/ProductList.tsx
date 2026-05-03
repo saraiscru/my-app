@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 type Tag = {
   id: number;
@@ -111,7 +112,8 @@ function CategoryItem({
   );
 }
 
-export default function ProductList() {
+export default function ProductList({ isAdmin = false }: { isAdmin?: boolean }) {
+  const router = useRouter();
   const { data: products = [], isLoading: loadingProducts } = useQuery({
     queryKey: ["products"],
     queryFn: () => fetch("/api/products").then((r) => r.json()),
@@ -436,9 +438,16 @@ let filtered = (products as Product[]).filter((p: Product) => {
                     Vezi detalii →
                     </button>
                     
-                    <Link href={`/products/edit-product/${product.id}`} className="px-3 py-2 rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 hover:border-gray-300 transition-all text-sm" title="Editează">
+                    {isAdmin && (
+                    <button
+                      type="button"
+                      onClick={() => router.push(`/products/edit-product/${product.id}`)}
+                      className="px-3 py-2 rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 hover:border-gray-300 transition-all text-sm"
+                      title="Editează"
+                    >
                     <span>✏️</span>
-                </Link>
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
