@@ -23,6 +23,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       price: body.price,
       description: body.description,
       categoryId: body.categoryId,
+      imageUrl: body.imageUrl ?? null,
       tags: {
         set: [],
         connect: (body.tagIds || []).map((id: number) => ({ id })),

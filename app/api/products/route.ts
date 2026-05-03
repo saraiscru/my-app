@@ -31,7 +31,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, price, description, categoryId, tagIds } = body;
+    const { name, price, description, categoryId, tagIds, imageUrl} = body;
 
     const product = await prisma.product.create({
       data: {
@@ -39,6 +39,7 @@ export async function POST(request: Request) {
         price,
         description,
         categoryId,
+        imageUrl: imageUrl ?? null,
         tags: {
           connect: tagIds?.map((id: number) => ({ id })) || [],
         },

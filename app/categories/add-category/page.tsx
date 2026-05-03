@@ -5,6 +5,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+
+const [submitError, setSubmitError] = useState<string | null>(null);
+
 
 const schema = z.object({
   name: z.string().min(1, "Numele este obligatoriu"),
@@ -55,6 +59,11 @@ export default function AddCategoryPage() {
     if (res.ok) {
       await queryClient.invalidateQueries({ queryKey: ["categories"] });
       router.push("/");
+    }else{
+        const errorData = await res.json();
+         if (res.status === 401) setSubmitError("Trebuie să fii autentificat.");
+        else if (res.status === 403) setSubmitError("Nu ai permisiunea să adaugi categorii.");
+        else setSubmitError(errorData.error || "Eroare la salvarea categoriei.");
     }
   };
 
@@ -97,7 +106,13 @@ export default function AddCategoryPage() {
                 ))}
               </select>
             </div>
-
+          
+            {submitError && (
+            <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl">
+              {submitError}
+            </div>
+          )}
+            
             <div className="flex gap-3 mt-2">
               <button
                 type="button"

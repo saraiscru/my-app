@@ -1,8 +1,17 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import jwt from "jsonwebtoken";
+import type { Metadata } from "next";
+
+
 
 const JWT_SECRET = process.env.JWT_SECRET!;
+
+
+export const metadata: Metadata = {
+  title: "TechZone — Editează produs",
+  description: "Editează detaliile produsului în catalogul TechZone.",
+};
 
 export default async function AddProductLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = await cookies();

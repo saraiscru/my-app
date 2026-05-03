@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
+import { jwtVerify } from "jose";
 
-const JWT_SECRET = process.env.JWT_SECRET!;
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET!);
 
 const protectedRoutes = [
   { path: "/api/products", methods: ["POST", "PUT", "DELETE"] },
@@ -9,7 +9,7 @@ const protectedRoutes = [
   { path: "/api/tags", methods: ["POST", "PUT", "DELETE"] },
 ];
 
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const method = req.method;
 
@@ -26,10 +26,13 @@ export function middleware(req: NextRequest) {
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { role: string };
-    if (method !== "GET" && decoded.role !== "admin") {
+    const { payload } = await jwtVerify(token, JWT_SECRET);
+    const role = payload.role as string;
+
+    if (method !== "GET" && role !== "admin") {
       return NextResponse.json({ error: "Acces interzis" }, { status: 403 });
     }
+
     return NextResponse.next();
   } catch {
     return NextResponse.json({ error: "Token invalid" }, { status: 401 });

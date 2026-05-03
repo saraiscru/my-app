@@ -397,20 +397,28 @@ let filtered = (products as Product[]).filter((p: Product) => {
                 key={product.id}
                 className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 hover:-translate-y-1"
               >
-                <div className="h-48 bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center">
-                  <span className="text-6xl">
-                    {product.category.name === "Smartphone-uri" ? "📱" :
-                     product.category.name === "Tablete" ? "📟" :
-                     product.category.name === "Laptopuri" ? "💻" :
-                     product.category.name === "Desktop-uri" ? "🖥️" :
-                     product.category.name === "Televizoare" ? "📺" :
-                     product.category.name === "Căști" ? "🎧" :
-                     product.category.name === "Console" ? "🎮" :
-                     product.category.name === "Accesorii Gaming" ? "🕹️" :
-                     product.category.name === "Frigidere" ? "🧊" :
-                     product.category.name === "Mașini de spălat" ? "🫧" : "📦"}
-                  </span>
-                </div>
+                <div className="h-48 bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center overflow-hidden">
+                    {product.imageUrl ? (
+                      <img
+                        src={product.imageUrl}
+                        alt={product.name}
+                        className="w-full h-full object-contain p-2"
+                      />
+                    ) : (
+                      <span className="text-6xl">
+                        {product.category.name === "Smartphone-uri" ? "📱" :
+                        product.category.name === "Tablete" ? "📟" :
+                        product.category.name === "Laptopuri" ? "💻" :
+                        product.category.name === "Desktop-uri" ? "🖥️" :
+                        product.category.name === "Televizoare" ? "📺" :
+                        product.category.name === "Căști" ? "🎧" :
+                        product.category.name === "Console" ? "🎮" :
+                        product.category.name === "Accesorii Gaming" ? "🕹️" :
+                        product.category.name === "Frigidere" ? "🧊" :
+                        product.category.name === "Mașini de spălat" ? "🫧" : "📦"}
+                      </span>
+                    )}
+                  </div>
                 <div className="p-4">
                   <p className="text-xs text-blue-600 font-medium uppercase tracking-wide mb-1">
                     {product.category.name}
@@ -434,10 +442,13 @@ let filtered = (products as Product[]).filter((p: Product) => {
                       </span>
                     ))}
                   </div>
-                    <button className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-sm font-semibold py-2 rounded-xl hover:from-blue-600 hover:to-purple-600 transition-all duration-200">
-                    Vezi detalii →
+                  <button
+                      onClick={() => router.push(`/products/${product.id}`)}
+                      className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-sm font-semibold py-2 rounded-xl hover:from-blue-600 hover:to-purple-600 transition-all duration-200"
+                    >
+                      Vezi detalii →
                     </button>
-                    
+
                     {isAdmin && (
                     <button
                       type="button"

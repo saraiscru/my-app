@@ -7,6 +7,7 @@ import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import { useState } from "react";
 
 const schema = z.object({
   name: z.string().min(1, "Numele este obligatoriu"),
@@ -37,6 +38,7 @@ function flattenCategories(categories: Category[], parentId: number | null = nul
   return result;
 }
 
+
 export default function NewProductPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -56,6 +58,32 @@ export default function NewProductPage() {
   });
 
   const selectedTags = watch("tagIds") || [];
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => setImagePreview(reader.result as string);
+  reader.readAsDataURL(file);
+
+  setUploading(true);
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await fetch("/api/upload", {
+    method: "POST",
+    body: formData,
+  });
+
+  const data = await res.json();
+  if (res.ok) setImageUrl(data.url);
+  setUploading(false);
+};
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -81,7 +109,6 @@ export default function NewProductPage() {
     categoryId: data.categoryId,
     category: categories.find((c) => c.id === data.categoryId) || { id: data.categoryId, name: "", parentId: null },
     tags: tags.filter((t) => (data.tagIds || []).includes(t.id)),
-    imageUrl: null,
   };
 
   queryClient.setQueryData(["products"], (old: unknown[]) => [newProduct, ...(old || [])]);
@@ -89,7 +116,7 @@ export default function NewProductPage() {
   const res = await fetch("/api/products", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ...data, description }),
+    body: JSON.stringify({ ...data, description, imageUrl }),
   });
 
   if (res.ok) {
@@ -97,6 +124,10 @@ export default function NewProductPage() {
     router.push("/");
   } else {
     await queryClient.invalidateQueries({ queryKey: ["products"] });
+    const errorData = await res.json();
+    if (res.status === 401) setSubmitError("Trebuie să fii autentificat pentru a adăuga produse.");
+    else if (res.status === 403) setSubmitError("Nu ai permisiunea să adaugi produse.");
+    else setSubmitError(errorData.error || "Eroare la salvarea produsului.");
   }
 };
 
@@ -195,6 +226,41 @@ export default function NewProductPage() {
                 ))}
               </div>
             </div>
+      <div>
+        <label className="text-sm font-medium text-gray-700 mb-1 block">Imagine produs</label>
+        <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            className="w-full border border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none"
+            />
+            {uploading && <p className="text-blue-500 text-xs mt-1">Se încarcă imaginea...</p>}
+
+            {imagePreview && (
+            <div className="mt-3">
+            <p className="text-xs text-gray-500 mb-1">Preview:</p>
+            <div className="relative w-40">
+             <img src={imagePreview} alt="Preview" className="w-40 h-40 object-cover rounded-xl border border-gray-200" />
+            <button
+                    type="button"
+                    onClick={() => {
+                      setImagePreview(null);
+                      setImageUrl(null);
+                    }}
+                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            )}
+            </div>
+            
+          {submitError && (
+            <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl">
+              {submitError}
+            </div>
+          )}
 
             {/* Butoane */}
             <div className="flex gap-3 mt-2">
