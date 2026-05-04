@@ -7,8 +7,6 @@ import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-const [submitError, setSubmitError] = useState<string | null>(null);
-
 
 const schema = z.object({
   name: z.string().min(1, "Numele este obligatoriu"),
