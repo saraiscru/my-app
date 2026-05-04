@@ -28,6 +28,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ id: user.id, email: user.email, role: user.role }, { status: 201 });
   } catch (error) {
+    console.error("Register error:", error);
     return NextResponse.json({ error: "Eroare la înregistrare" }, { status: 500 });
   }
 }
