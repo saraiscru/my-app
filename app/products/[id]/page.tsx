@@ -1,9 +1,8 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 
-const prisma = new PrismaClient();
 
 type Props = { params: Promise<{ id: string }> };
 
