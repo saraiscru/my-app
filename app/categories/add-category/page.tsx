@@ -35,7 +35,7 @@ function flattenCategories(categories: Category[], parentId: number | null = nul
 export default function AddCategoryPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
-
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ["categories"],
     queryFn: () => fetch("/api/categories").then((r) => r.json()),
