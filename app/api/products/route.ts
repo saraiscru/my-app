@@ -21,6 +21,7 @@ export async function GET(request: Request) {
     });
     return NextResponse.json(products);
   } catch (error) {
+    console.error("Products GET error:", error);
     return NextResponse.json(
       { error: "Eroare la obtinerea produselor" },
       { status: 500 }

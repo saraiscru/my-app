@@ -13,6 +13,7 @@ export async function GET() {
     });
     return NextResponse.json(categories);
   } catch (error) {
+    console.error("Categories GET error:", error);
     return NextResponse.json(
       { error: "Eroare la obtinerea categoriilor" },
       { status: 500 }
