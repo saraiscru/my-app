@@ -1,16 +1,21 @@
+import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 
-
 type Props = { params: Promise<{ id: string }> };
+
+const getProduct = cache(async (id: number) => {
+  return prisma.product.findUnique({
+    where: { id },
+    include: { category: true, tags: true },
+  });
+});
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  const product = await prisma.product.findUnique({
-    where: { id: Number(id) },
-  });
+  const product = await getProduct(Number(id));
   return {
     title: product ? `TechZone — ${product.name}` : "TechZone — Produs",
     description: product?.description || "Detalii produs TechZone.",
@@ -19,12 +24,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ProductPage({ params }: Props) {
   const { id } = await params;
-  const product = await prisma.product.findUnique({
-    where: { id: Number(id) },
-    include: { category: true, tags: true },
-  });
-
+  const product = await getProduct(Number(id));
   if (!product) notFound();
+  
 
   const tagColors: Record<string, string> = {
     "Nou": "bg-green-100 text-green-700 border border-green-300",
