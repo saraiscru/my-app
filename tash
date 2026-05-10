@@ -1,0 +1,16 @@
+[33m0b044e9[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m fix: cache prisma query to reduce db connections
+[33mf706e91[m Update README.md
+[33m1840cab[m fix: remove useState outside component
+[33md739c37[m fix: move useState inside component
+[33m30a9b30[m fix: use shared prisma client
+[33mb5b45e1[m fix: log products and categories errors
+[33mc21d1d2[m fix: log login error
+[33m4a58359[m fix: log register error
+[33me7745b7[m fix: prisma generate on vercel build
+[33m6275428[m Step 6: Cloudinary images, SEO metadata, error handling, product detail page
+[33m0bfc6cb[m Step 5: JWT authentication and role-based authorization
+[33m51ef475[m Step 4: Product CRUD functionality with optimistic UI and category creation
+[33mc0e5616[m Step 3: Filtering, sorting, pagination, React Query, Suspense
+[33m7916794[m Step 2-3: Homepage, category tree, search and sort functionality
+[33m0d03fdf[m Step 2: API routes for products, categories and tags
+[33md72d59e[m Initial setup: Next.js, Tailwind, Prisma, MySQL
