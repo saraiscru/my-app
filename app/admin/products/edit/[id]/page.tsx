@@ -168,12 +168,6 @@ export default function EditProductPage() {
   }
 };
 
-  const handleDelete = async () => {
-    if (!confirm("Ești sigur că vrei să ștergi acest produs?")) return;
-    const res = await fetch(`/api/products/${id}`, { method: "DELETE" });
-    if (res.ok) router.push("/admin/products");
-  };
-
   if (loadingProduct) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -296,13 +290,6 @@ export default function EditProductPage() {
       )}
 
       <div className="flex gap-3 mt-2">
-        <button
-          type="button"
-          onClick={handleDelete}
-          className="px-4 py-2 rounded-xl border border-red-200 text-red-500 text-sm font-medium hover:bg-red-50 transition-all"
-        >
-          Șterge produs
-        </button>
         <button
           type="button"
           onClick={() => router.push("/admin/products")}

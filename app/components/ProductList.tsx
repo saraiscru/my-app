@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 type Tag = {
   id: number;
@@ -135,7 +136,11 @@ export default function ProductList({ isAdmin = false }: { isAdmin?: boolean }) 
   const router = useRouter();
   const PRODUCTS_PER_PAGE = 9;
 
-  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+  const searchParams = useSearchParams();
+  const initialCategory = searchParams.get("category") 
+    ? Number(searchParams.get("category")) 
+    : null;
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(initialCategory);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [sortBy, setSortBy] = useState("default");
@@ -146,7 +151,7 @@ export default function ProductList({ isAdmin = false }: { isAdmin?: boolean }) 
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-  const timer = setTimeout(() => setDebouncedSearch(search), 200);
+  const timer = setTimeout(() => setDebouncedSearch(search), );
   return () => clearTimeout(timer);
 }, [search]);
 
@@ -216,9 +221,10 @@ export default function ProductList({ isAdmin = false }: { isAdmin?: boolean }) 
 
 
     const { data: allTags = [] } = useQuery<Tag[]>({
-      queryKey: ["tags"],
-      queryFn: () => fetch("/api/tags").then((r) => r.json()),
-    });
+    queryKey: ["all-tags"],
+    queryFn: () => fetch("/api/tags").then((r) => r.json()),
+    enabled: !loadingCategories && !loadingProducts,
+  });
 
   if (loadingProducts || loadingCategories) {
     return (
@@ -242,7 +248,7 @@ export default function ProductList({ isAdmin = false }: { isAdmin?: boolean }) 
             className={`py-1 px-2 rounded-lg cursor-pointer text-sm mb-2 transition-all ${
               selectedCategory === null ? "bg-blue-500 text-white font-semibold" : "text-gray-700 hover:bg-blue-50"
             }`}
-            onClick={() => { setSelectedCategory(null); setCurrentPage(1); }}
+            onClick={() => { setSelectedCategory(null); setCurrentPage(1); router.replace("/"); }}
           >
             Toate produsele
           </div>
@@ -450,16 +456,6 @@ export default function ProductList({ isAdmin = false }: { isAdmin?: boolean }) 
                     >
                       Vezi detalii →
                     </button>
-                    {isAdmin && (
-                      <button
-                        type="button"
-                        onClick={() => router.push(`/products/edit-product/${product.id}`)}
-                        className="px-3 py-2 rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 hover:border-gray-300 transition-all text-sm"
-                        title="Editează"
-                      >
-                        ✏️
-                      </button>
-                    )}
                   </div>
                 </div>
               </div>

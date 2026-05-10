@@ -29,7 +29,10 @@ export default async function Home() {
                     Admin
                   </Link>
                 )}
-                <UserButton />
+                <div className="flex items-center gap-2 bg-white/20 px-3 py-2 rounded-xl cursor-pointer">
+                  <UserButton />
+                  <span className="text-white text-sm font-medium">Cont ▾</span>
+                </div>
               </>
             ) : (
               <Link href="/login" className="bg-white text-blue-600 font-semibold text-sm px-4 py-2 rounded-xl hover:bg-blue-50 transition-all">

@@ -76,37 +76,43 @@ export default async function ProductPage({ params }: Props) {
               )}
             </div>
 
-            {/* Detalii */}
-            <div className="p-8 flex flex-col gap-4">
-              <p className="text-xs text-blue-600 font-medium uppercase tracking-wide">
-                {product.category.name}
-              </p>
-              <h1 className="text-2xl font-bold text-gray-800">{product.name}</h1>
-              <p className="text-3xl font-bold text-blue-600">
-                {product.price.toLocaleString("ro-RO")}{" "}
-                <span className="text-base font-normal text-gray-500">RON</span>
-              </p>
+              {/* Detalii */}
+              <div className="p-8 flex flex-col gap-6">
+                <Link 
+                  href={`/?category=${product.categoryId}`}
+                  className="text-sm text-blue-600 font-semibold uppercase tracking-wide hover:underline"
+                >
+                  {product.category.name}
+                </Link>
+                <h1 className="text-2xl font-bold text-gray-900">{product.name}</h1>
+                <p className="text-3xl font-bold text-blue-600">
+                  {product.price.toLocaleString("ro-RO")}{" "}
+                  <span className="text-base font-normal text-gray-500">RON</span>
+                </p>
 
-              {product.tags.length > 0 && (
-                <div className="flex gap-2 flex-wrap">
-                  {product.tags.map((tag) => (
-                    <span
-                      key={tag.id}
-                      className={`text-xs px-3 py-1 rounded-full font-medium ${tagColors[tag.name] || "bg-gray-100 text-gray-600"}`}
-                    >
-                      {tag.name}
-                    </span>
-                  ))}
-                </div>
-              )}
+                {product.tags.length > 0 && (
+                  <div className="flex gap-2 flex-wrap">
+                    {product.tags.map((tag) => (
+                      <span
+                        key={tag.id}
+                        className={`text-xs px-3 py-1 rounded-full font-medium ${tagColors[tag.name] || "bg-gray-100 text-gray-600"}`}
+                      >
+                        {tag.name}
+                      </span>
+                    ))}
+                  </div>
+                )}
 
-              {product.description && (
-                <div
-                  className="text-sm text-gray-600 prose prose-sm max-w-none"
-                  dangerouslySetInnerHTML={{ __html: product.description }}
-                />
-              )}
-            </div>
+                {product.description && (
+                  <div className="border-t border-gray-100 pt-6">
+                    <h2 className="text-base font-bold text-gray-900 mb-3">Descriere produs</h2>
+                    <div
+                      className="text-base text-gray-900 prose prose-base max-w-none leading-relaxed"
+                      dangerouslySetInnerHTML={{ __html: product.description }}
+                    />
+                  </div>
+                )}
+              </div>
           </div>
         </div>
       </main>

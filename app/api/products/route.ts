@@ -26,9 +26,12 @@ export async function GET(request: Request) {
     }
 
     if (search) {
-        where.name = { contains: search };
-    }
-
+          where.OR = [
+            { name: { contains: search } },
+            { description: { contains: search } },
+            { category: { name: { contains: search } } },
+          ];
+        }
     if (tagIds.length > 0) {
       where.AND = tagIds.map((id) => ({
         tags: { some: { id } },
