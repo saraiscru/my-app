@@ -132,21 +132,28 @@ export default function EditProductPage() {
 
   const flatCategories = flattenCategories(categories);
 
-  const onSubmit = async (data: FormData) => {
+const onSubmit = async (data: FormData) => {
   const description = editor?.getHTML() || "";
+  
+  const updatedProduct = {
+    name: data.name,
+    price: data.price,
+    description,
+    categoryId: data.categoryId,
+    category: categories.find((c) => c.id === data.categoryId),
+    tags: tags.filter((t) => (data.tagIds || []).includes(t.id)),
+    imageUrl: imageUrl ?? null,
+  };
+
+  // Optimistic UI
   queryClient.setQueryData(["products"], (old: unknown[]) =>
     (old || []).map((p: any) =>
-      p.id === Number(id)
-        ? {
-            ...p,
-            name: data.name,
-            price: data.price,
-            description,
-            categoryId: data.categoryId,
-            category: categories.find((c) => c.id === data.categoryId) || p.category,
-            tags: tags.filter((t) => (data.tagIds || []).includes(t.id)),
-          }
-        : p
+      p.id === Number(id) ? { ...p, ...updatedProduct } : p
+    )
+  );
+  queryClient.setQueryData(["admin-products"], (old: unknown[]) =>
+    (old || []).map((p: any) =>
+      p.id === Number(id) ? { ...p, ...updatedProduct } : p
     )
   );
 
@@ -158,23 +165,18 @@ export default function EditProductPage() {
 
   if (res.ok) {
     await queryClient.invalidateQueries({ queryKey: ["products"] });
+    await queryClient.invalidateQueries({ queryKey: ["admin-products"] });
     router.push("/admin/products");
   } else {
+    // Rollback
     await queryClient.invalidateQueries({ queryKey: ["products"] });
+    await queryClient.invalidateQueries({ queryKey: ["admin-products"] });
     const errorData = await res.json();
     if (res.status === 401) setSubmitError("Trebuie să fii autentificat pentru a edita produse.");
     else if (res.status === 403) setSubmitError("Nu ai permisiunea să editezi produse.");
     else setSubmitError(errorData.error || "Eroare la salvarea produsului.");
   }
 };
-
-  if (loadingProduct) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-      </div>
-    );
-  }
 
   return (
   <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">

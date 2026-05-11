@@ -109,9 +109,11 @@ export default function NewProductPage() {
     categoryId: data.categoryId,
     category: categories.find((c) => c.id === data.categoryId) || { id: data.categoryId, name: "", parentId: null },
     tags: tags.filter((t) => (data.tagIds || []).includes(t.id)),
+    imageUrl: imageUrl ?? null,
   };
 
   queryClient.setQueryData(["products"], (old: unknown[]) => [newProduct, ...(old || [])]);
+  queryClient.setQueryData(["admin-products"], (old: unknown[]) => [newProduct, ...(old || [])]);
 
   const res = await fetch("/api/products", {
     method: "POST",
@@ -121,9 +123,12 @@ export default function NewProductPage() {
 
   if (res.ok) {
     await queryClient.invalidateQueries({ queryKey: ["products"] });
+    await queryClient.invalidateQueries({ queryKey: ["admin-products"] });
     router.push("/admin/products");
   } else {
+    // Rollback
     await queryClient.invalidateQueries({ queryKey: ["products"] });
+    await queryClient.invalidateQueries({ queryKey: ["admin-products"] });
     const errorData = await res.json();
     if (res.status === 401) setSubmitError("Trebuie să fii autentificat pentru a adăuga produse.");
     else if (res.status === 403) setSubmitError("Nu ai permisiunea să adaugi produse.");

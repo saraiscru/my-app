@@ -46,25 +46,43 @@ export default function AddCategoryPage() {
   const flatCategories = flattenCategories(categories);
 
   const onSubmit = async (data: FormData) => {
-    const res = await fetch("/api/categories", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: data.name,
-        parentId: data.parentId || null,
-      }),
-    });
-    if (res.ok) {
-      await queryClient.invalidateQueries({ queryKey: ["categories"] });
-      router.push("/admin/categories");
-    }else{
-        const errorData = await res.json();
-         if (res.status === 401) setSubmitError("Trebuie să fii autentificat.");
-        else if (res.status === 403) setSubmitError("Nu ai permisiunea să adaugi categorii.");
-        else setSubmitError(errorData.error || "Eroare la salvarea categoriei.");
-    }
+  // Optimistic UI — adaugă categoria imediat în cache
+  const tempCategory = {
+    id: Date.now(),
+    name: data.name,
+    parentId: data.parentId || null,
   };
+  
+  queryClient.setQueryData(["categories"], (old: Category[] = []) => [...old, tempCategory]);
+  queryClient.setQueryData(["admin-categories"], (old: Category[] = []) => [...old, tempCategory]);
 
+  const res = await fetch("/api/categories", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: data.name,
+      parentId: data.parentId || null,
+    }),
+  });
+
+  if (res.ok) {
+    await queryClient.invalidateQueries({ queryKey: ["categories"] });
+    await queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
+    router.push("/admin/categories");
+  } else {
+    // Rollback — scoate categoria temporară din cache
+    queryClient.setQueryData(["categories"], (old: Category[] = []) => 
+      old.filter((c) => c.id !== tempCategory.id)
+    );
+    queryClient.setQueryData(["admin-categories"], (old: Category[] = []) => 
+      old.filter((c) => c.id !== tempCategory.id)
+    );
+    const errorData = await res.json();
+    if (res.status === 401) setSubmitError("Trebuie să fii autentificat.");
+    else if (res.status === 403) setSubmitError("Nu ai permisiunea să adaugi categorii.");
+    else setSubmitError(errorData.error || "Eroare la salvarea categoriei.");
+  }
+};
   return (
   <div>
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">

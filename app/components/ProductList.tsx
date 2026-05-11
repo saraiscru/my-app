@@ -151,7 +151,7 @@ export default function ProductList({ isAdmin = false }: { isAdmin?: boolean }) 
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-  const timer = setTimeout(() => setDebouncedSearch(search), );
+  const timer = setTimeout(() => setDebouncedSearch(search), 400);
   return () => clearTimeout(timer);
 }, [search]);
 
@@ -243,7 +243,26 @@ export default function ProductList({ isAdmin = false }: { isAdmin?: boolean }) 
     <div className="flex gap-6">
       <aside className="w-64 flex-shrink-0">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
-          <h3 className="font-bold text-gray-800 mb-3 text-sm uppercase tracking-wide">Categorii</h3>
+          <div className="flex items-center justify-between mb-3">
+          <h3 className="font-bold text-gray-800 text-sm uppercase tracking-wide">Categorii</h3>
+          {(selectedCategory !== null || debouncedSearch || selectedTags.length > 0 || (priceInitialized && (priceRange[0] > globalMin || priceRange[1] < globalMax))) && (
+            <button
+              onClick={() => {
+                setSelectedCategory(null);
+                setSearch("");
+                setDebouncedSearch("");
+                setSelectedTags([]);
+                setPriceRange([globalMin, globalMax]);
+                setDebouncedPriceRange([globalMin, globalMax]);
+                setCurrentPage(1);
+                router.replace("/");
+              }}
+              className="text-xs text-red-500 bg-red-50 hover:bg-red-100 px-2 py-0.5 rounded-lg transition-all font-medium"
+            >
+              ✕ Reset filtre
+            </button>
+          )}
+        </div>
           <div
             className={`py-1 px-2 rounded-lg cursor-pointer text-sm mb-2 transition-all ${
               selectedCategory === null ? "bg-blue-500 text-white font-semibold" : "text-gray-700 hover:bg-blue-50"

@@ -14,13 +14,15 @@ export default clerkMiddleware(async (auth, request) => {
   console.log("middleware path:", request.nextUrl.pathname, "userId:", userId);
   
   // Protejează toate rutele non-publice
-  if (!isPublicRoute(request)) {
-    if (!userId) {
-      const signInUrl = new URL("/login", request.url);
-      return NextResponse.redirect(signInUrl);
-    }
-  }
-
+  const isPublicRoute = createRouteMatcher([
+  "/",
+  "/products/(.*)",
+  "/login(.*)",
+  "/register(.*)",
+  "/api/products(.*)",
+  "/api/categories(.*)",
+  "/api/tags(.*)",
+]);
   // Protejează API-urile pentru metode non-GET
   const isApiRoute = request.nextUrl.pathname.startsWith("/api/");
   if (isApiRoute && request.method !== "GET") {

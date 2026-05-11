@@ -61,8 +61,23 @@ export default function EditCategoryPage() {
 
   const flatCategories = flattenCategories(categories).filter(({ cat }) => cat.id !== Number(id));
 
-  const onSubmit = async (data: FormData) => {
+ const onSubmit = async (data: FormData) => {
     setSubmitError(null);
+
+    // Optimistic UI — actualizează categoria imediat în cache
+    const updatedCategory = {
+      id: Number(id),
+      name: data.name,
+      parentId: data.parentId || null,
+    };
+
+    queryClient.setQueryData(["categories"], (old: Category[] = []) =>
+      old.map((c) => c.id === Number(id) ? { ...c, ...updatedCategory } : c)
+    );
+    queryClient.setQueryData(["admin-categories"], (old: Category[] = []) =>
+      old.map((c) => c.id === Number(id) ? { ...c, ...updatedCategory } : c)
+    );
+
     const res = await fetch(`/api/categories/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -77,18 +92,13 @@ export default function EditCategoryPage() {
       await queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
       router.push("/admin/categories");
     } else {
+      // Rollback
+      await queryClient.invalidateQueries({ queryKey: ["categories"] });
+      await queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
       const errorData = await res.json();
       setSubmitError(errorData.error || "Eroare la salvarea categoriei.");
     }
   };
-
-  if (loadingCategory) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
 
   return (
     <div>

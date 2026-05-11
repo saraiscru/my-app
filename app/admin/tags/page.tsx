@@ -47,29 +47,52 @@ export default function AdminTagsPage() {
     setShowForm(true);
   };
 
-  const onSubmit = async (data: FormData) => {
-    setSubmitError(null);
-    const res = editingTag
-      ? await fetch(`/api/tags/${editingTag.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: data.name }),
-        })
-      : await fetch("/api/tags", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: data.name }),
-        });
+const onSubmit = async (data: FormData) => {
+  setSubmitError(null);
 
-    if (res.ok) {
-      await queryClient.invalidateQueries({ queryKey: ["admin-tags"] });
-      setShowForm(false);
-      reset({ name: "" });
-    } else {
-      const errorData = await res.json();
-      setSubmitError(errorData.error || "Eroare la salvare.");
-    }
-  };
+  // Optimistic UI
+  if (editingTag) {
+    // Edit
+    queryClient.setQueryData(["tags"], (old: Tag[] = []) =>
+      old.map((t) => t.id === editingTag.id ? { ...t, name: data.name } : t)
+    );
+    queryClient.setQueryData(["admin-tags"], (old: Tag[] = []) =>
+      old.map((t) => t.id === editingTag.id ? { ...t, name: data.name } : t)
+    );
+  } else {
+    // Add
+    const tempTag = { id: Date.now(), name: data.name };
+    queryClient.setQueryData(["tags"], (old: Tag[] = []) => [...old, tempTag]);
+    queryClient.setQueryData(["admin-tags"], (old: Tag[] = []) => [...old, tempTag]);
+  }
+
+  const res = editingTag
+    ? await fetch(`/api/tags/${editingTag.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: data.name }),
+      })
+    : await fetch("/api/tags", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: data.name }),
+      });
+
+  if (res.ok) {
+    await queryClient.invalidateQueries({ queryKey: ["tags"] });
+    await queryClient.invalidateQueries({ queryKey: ["admin-tags"] });
+    await queryClient.invalidateQueries({ queryKey: ["all-tags"] });
+    setShowForm(false);
+    reset({ name: "" });
+  } else {
+    // Rollback
+    await queryClient.invalidateQueries({ queryKey: ["tags"] });
+    await queryClient.invalidateQueries({ queryKey: ["admin-tags"] });
+    await queryClient.invalidateQueries({ queryKey: ["all-tags"] });
+    const errorData = await res.json();
+    setSubmitError(errorData.error || "Eroare la salvare.");
+  }
+};
 
   const handleDelete = async (id: number) => {
     if (!confirm("Ești sigur că vrei să ștergi acest tag?")) return;
