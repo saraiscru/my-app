@@ -47,6 +47,18 @@ const tagColors: Record<string, string> = {
   "Stoc Limitat": "bg-pink-100 text-pink-700 border border-pink-300",
 };
 
+// Hook pentru detectarea mobilului
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+  return isMobile;
+}
+
 function buildTree(categories: Category[]): Category[] {
   const map: Record<number, Category> = {};
   const roots: Category[] = [];
@@ -134,11 +146,12 @@ function CategoryItem({
 
 export default function ProductList({ isAdmin = false }: { isAdmin?: boolean }) {
   const router = useRouter();
+  const isMobile = useIsMobile();
   const PRODUCTS_PER_PAGE = 9;
 
   const searchParams = useSearchParams();
-  const initialCategory = searchParams.get("category") 
-    ? Number(searchParams.get("category")) 
+  const initialCategory = searchParams.get("category")
+    ? Number(searchParams.get("category"))
     : null;
   const [selectedCategory, setSelectedCategory] = useState<number | null>(initialCategory);
   const [search, setSearch] = useState("");
@@ -149,11 +162,12 @@ export default function ProductList({ isAdmin = false }: { isAdmin?: boolean }) 
   const [debouncedPriceRange, setDebouncedPriceRange] = useState<[number, number]>([0, 0]);
   const [priceInitialized, setPriceInitialized] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
-  const timer = setTimeout(() => setDebouncedSearch(search), 400);
-  return () => clearTimeout(timer);
-}, [search]);
+    const timer = setTimeout(() => setDebouncedSearch(search), 400);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   const { data: categories = [], isLoading: loadingCategories } = useQuery<Category[]>({
     queryKey: ["categories"],
@@ -161,9 +175,9 @@ export default function ProductList({ isAdmin = false }: { isAdmin?: boolean }) 
   });
 
   useEffect(() => {
-  const timer = setTimeout(() => setDebouncedPriceRange(priceRange), 500);
-  return () => clearTimeout(timer);
-}, [priceRange]);
+    const timer = setTimeout(() => setDebouncedPriceRange(priceRange), 500);
+    return () => clearTimeout(timer);
+  }, [priceRange]);
 
   function buildUrl() {
     const params = new URLSearchParams();
@@ -211,16 +225,16 @@ export default function ProductList({ isAdmin = false }: { isAdmin?: boolean }) 
   const total = data?.total ?? 0;
   const globalMin = data?.minPrice ?? 0;
   const globalMax = data?.maxPrice ?? 0;
+
   useEffect(() => {
-  if (data && !priceInitialized && data.minPrice !== data.maxPrice) {
-    setPriceRange([data.minPrice, data.maxPrice]);
-    setDebouncedPriceRange([data.minPrice, data.maxPrice]);
-    setPriceInitialized(true);
-  }
-}, [data, priceInitialized]);
+    if (data && !priceInitialized && data.minPrice !== data.maxPrice) {
+      setPriceRange([data.minPrice, data.maxPrice]);
+      setDebouncedPriceRange([data.minPrice, data.maxPrice]);
+      setPriceInitialized(true);
+    }
+  }, [data, priceInitialized]);
 
-
-    const { data: allTags = [] } = useQuery<Tag[]>({
+  const { data: allTags = [] } = useQuery<Tag[]>({
     queryKey: ["all-tags"],
     queryFn: () => fetch("/api/tags").then((r) => r.json()),
     enabled: !loadingCategories && !loadingProducts,
@@ -239,35 +253,68 @@ export default function ProductList({ isAdmin = false }: { isAdmin?: boolean }) 
 
   const tree = buildTree(categories);
 
+  // Paginare simplificata pe mobil: arata doar paginile adiacente + prima + ultima
+  const visiblePages = isMobile
+    ? Array.from({ length: totalPages }, (_, i) => i + 1).filter(
+        (p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1
+      )
+    : Array.from({ length: totalPages }, (_, i) => i + 1);
+
   return (
-    <div className="flex gap-6">
-      <aside className="w-64 flex-shrink-0">
+    <div className="flex gap-6 w-full min-w-0">
+
+      {/* ===== BUTON HAMBURGER - doar pe mobil ===== */}
+      <button
+        className="md:hidden fixed bottom-20 right-4 z-50 bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-xl rounded-full w-14 h-14 flex items-center justify-center text-xl border-2 border-white"
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        aria-label="Filtre"
+      >
+        {sidebarOpen ? "✕" : "☰"}
+      </button>
+
+      {/* ===== OVERLAY ===== */}
+      {sidebarOpen && (
+        <div
+          className="md:hidden fixed inset-0 bg-black/40 z-30"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* ===== SIDEBAR ===== */}
+      <aside
+        className={`
+          fixed top-0 left-0 h-full w-72 z-40 overflow-y-auto
+          transition-transform duration-300 ease-in-out
+          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+          md:translate-x-0 md:static md:h-auto md:w-64 md:flex-shrink-0 md:overflow-visible
+        `}
+      >
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between mb-3">
-          <h3 className="font-bold text-gray-800 text-sm uppercase tracking-wide">Categorii</h3>
-          {(selectedCategory !== null || debouncedSearch || selectedTags.length > 0 || (priceInitialized && (priceRange[0] > globalMin || priceRange[1] < globalMax))) && (
-            <button
-              onClick={() => {
-                setSelectedCategory(null);
-                setSearch("");
-                setDebouncedSearch("");
-                setSelectedTags([]);
-                setPriceRange([globalMin, globalMax]);
-                setDebouncedPriceRange([globalMin, globalMax]);
-                setCurrentPage(1);
-                router.replace("/");
-              }}
-              className="text-xs text-red-500 bg-red-50 hover:bg-red-100 px-2 py-0.5 rounded-lg transition-all font-medium"
-            >
-              ✕ Reset filtre
-            </button>
-          )}
-        </div>
+            <h3 className="font-bold text-gray-800 text-sm uppercase tracking-wide">Categorii</h3>
+            {(selectedCategory !== null || debouncedSearch || selectedTags.length > 0 || (priceInitialized && (priceRange[0] > globalMin || priceRange[1] < globalMax))) && (
+              <button
+                onClick={() => {
+                  setSelectedCategory(null);
+                  setSearch("");
+                  setDebouncedSearch("");
+                  setSelectedTags([]);
+                  setPriceRange([globalMin, globalMax]);
+                  setDebouncedPriceRange([globalMin, globalMax]);
+                  setCurrentPage(1);
+                  router.replace("/");
+                }}
+                className="text-xs text-red-500 bg-red-50 hover:bg-red-100 px-2 py-0.5 rounded-lg transition-all font-medium"
+              >
+                ✕ Reset filtre
+              </button>
+            )}
+          </div>
           <div
             className={`py-1 px-2 rounded-lg cursor-pointer text-sm mb-2 transition-all ${
               selectedCategory === null ? "bg-blue-500 text-white font-semibold" : "text-gray-700 hover:bg-blue-50"
             }`}
-            onClick={() => { setSelectedCategory(null); setCurrentPage(1); router.replace("/"); }}
+            onClick={() => { setSelectedCategory(null); setCurrentPage(1); router.replace("/"); setSidebarOpen(false); }}
           >
             Toate produsele
           </div>
@@ -276,7 +323,7 @@ export default function ProductList({ isAdmin = false }: { isAdmin?: boolean }) 
               key={cat.id}
               category={cat}
               selectedId={selectedCategory}
-              onSelect={(id) => { setSelectedCategory(id); setCurrentPage(1); }}
+              onSelect={(id) => { setSelectedCategory(id); setCurrentPage(1); setSidebarOpen(false); }}
               depth={0}
             />
           ))}
@@ -395,9 +442,11 @@ export default function ProductList({ isAdmin = false }: { isAdmin?: boolean }) 
         </div>
       </aside>
 
-      {/* Lista produse */}
-      <div className="flex-1">
-        <div className="flex gap-3 mb-6">
+      {/* ===== LISTA PRODUSE ===== */}
+      <div className="flex-1 min-w-0">
+
+        {/* Search + Sortare — stacked pe mobil, row pe desktop */}
+        <div className="flex flex-col sm:flex-row gap-3 mb-6">
           <input
             type="text"
             placeholder="Caută produse..."
@@ -482,8 +531,9 @@ export default function ProductList({ isAdmin = false }: { isAdmin?: boolean }) 
           </div>
         )}
 
+        {/* Paginare — simplificata pe mobil */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-2 mt-8">
+          <div className="flex items-center justify-center gap-2 mt-8 flex-wrap">
             <button
               onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
               disabled={currentPage === 1}
@@ -491,19 +541,26 @@ export default function ProductList({ isAdmin = false }: { isAdmin?: boolean }) 
             >
               ← Înapoi
             </button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <button
-                key={page}
-                onClick={() => setCurrentPage(page)}
-                className={`w-9 h-9 rounded-xl text-sm font-medium transition-all ${
-                  currentPage === page
-                    ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white"
-                    : "border border-gray-200 text-gray-600 hover:bg-blue-50"
-                }`}
-              >
-                {page}
-              </button>
-            ))}
+            {visiblePages.map((page, idx) => {
+              const prev = visiblePages[idx - 1];
+              return (
+                <span key={page} className="contents">
+                  {prev && page - prev > 1 && (
+                    <span className="text-gray-400 text-sm">…</span>
+                  )}
+                  <button
+                    onClick={() => setCurrentPage(page)}
+                    className={`w-9 h-9 rounded-xl text-sm font-medium transition-all ${
+                      currentPage === page
+                        ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white"
+                        : "border border-gray-200 text-gray-600 hover:bg-blue-50"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                </span>
+              );
+            })}
             <button
               onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
               disabled={currentPage === totalPages}
