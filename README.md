@@ -52,7 +52,6 @@ Accesează `http://localhost:3000`
 
 1. Conectează repo-ul la Vercel
 2. Adaugă variabilele din `.env` în **Settings** → **Environment Variables**
-3. Pentru `DATABASE_URL` pe Vercel folosește `connection_limit=1`
 4. Redeploy
 
 
