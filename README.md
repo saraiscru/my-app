@@ -1,36 +1,76 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Instalare locală
 
-## Getting Started
+### Cerințe
 
-First, run the development server:
+- Node.js 18+
+- MySQL 8+
+- Cont Clerk (gratuit)
+- Cont Cloudinary (gratuit)
 
+### Pași
+
+**1. Clonează repo-ul**
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/saraiscru/my-app
+cd my-app
 ```
 
-Open my-app-one-gamma-19.vercel.app with your browser to see the result.
+**2. Instalează dependențele**
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**3. Creează baza de date MySQL**
+```bash
+mysql -u root -p -e "CREATE DATABASE techzone;"
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**4. Creează fișierul `.env`**
+```bash
+cp .env.example .env
+```
+Completează valorile din `.env` (vezi fisierul .env.example)
 
-## Learn More
+**5. Rulează migrările**
+```bash
+npx prisma migrate deploy
+```
 
-To learn more about Next.js, take a look at the following resources:
+**6. Populează baza de date cu date inițiale**
+```bash
+npx prisma db seed
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+**7. Pornește serverul**
+```bash
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Accesează `http://localhost:3000`
 
-## Deploy on Vercel
+## Deploy pe Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Conectează repo-ul la Vercel
+2. Adaugă variabilele din `.env` în **Settings** → **Environment Variables**
+3. Pentru `DATABASE_URL` pe Vercel folosește `connection_limit=1`
+4. Redeploy
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Structura proiectului
+
+```
+app/
+  admin/          ← zona de administrare
+    products/     ← management produse
+    categories/   ← management categorii
+    tags/         ← management taguri
+  api/            ← route handlers
+  components/     ← componente reutilizabile
+  login/          ← pagina de login (Clerk)
+  register/       ← pagina de înregistrare (Clerk)
+  products/       ← pagini publice produse
+prisma/
+  schema.prisma   ← schema bazei de date
+  migrations/     ← migrări
+  seed.ts         ← date inițiale
+```
