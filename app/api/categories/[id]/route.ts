@@ -1,6 +1,7 @@
-
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAdmin } from "@/lib/auth";
+import { categorySchema } from "@/lib/validations";
 
 export async function GET(
   _req: NextRequest,
@@ -20,10 +21,21 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authError = await requireAdmin();
+  if (authError) return authError;
+
   const { id } = await params;
   const body = await req.json();
 
-  if (body.parentId && Number(body.parentId) === Number(id)) {
+  const parsed = categorySchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.flatten().fieldErrors },
+      { status: 400 }
+    );
+  }
+
+  if (parsed.data.parentId && Number(parsed.data.parentId) === Number(id)) {
     return NextResponse.json(
       { error: "O categorie nu poate fi propriul parinte" },
       { status: 400 }
@@ -33,8 +45,8 @@ export async function PUT(
   const category = await prisma.category.update({
     where: { id: Number(id) },
     data: {
-      name: body.name,
-      parentId: body.parentId ?? null,
+      name: parsed.data.name,
+      parentId: parsed.data.parentId ?? null,
     },
     include: { parent: true, children: true },
   });
@@ -45,9 +57,12 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authError = await requireAdmin();
+  if (authError) return authError;
+
   const { id } = await params;
   const { searchParams } = new URL(req.url);
-  const mode = searchParams.get("mode"); 
+  const mode = searchParams.get("mode");
 
   const category = await prisma.category.findUnique({
     where: { id: Number(id) },
@@ -77,7 +92,6 @@ export async function DELETE(
   }
 
   if (hasChildren && mode === "cascade") {
-
     const childrenWithProducts = await prisma.category.findMany({
       where: { parentId: Number(id) },
       include: { products: true },
@@ -93,13 +107,11 @@ export async function DELETE(
         { status: 400 }
       );
     }
-    // Sterge copiii apoi categoria
     await prisma.$transaction([
       prisma.category.deleteMany({ where: { parentId: Number(id) } }),
       prisma.category.delete({ where: { id: Number(id) } }),
     ]);
   } else if (hasChildren && mode === "detach") {
-
     await prisma.$transaction([
       prisma.category.updateMany({
         where: { parentId: Number(id) },
@@ -108,7 +120,6 @@ export async function DELETE(
       prisma.category.delete({ where: { id: Number(id) } }),
     ]);
   } else {
-    // Nu are copii, sterge direct
     await prisma.category.delete({ where: { id: Number(id) } });
   }
 

@@ -2,20 +2,7 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 const isPublicRoute = createRouteMatcher([
-  "/",
-  "/products/(.*)",
-  "/login(.*)",
-  "/register(.*)",
-  // API-uri publice doar GET
-]);
-
-export default clerkMiddleware(async (auth, request) => {
-  const { userId } = await auth();
-  console.log("middleware path:", request.nextUrl.pathname, "userId:", userId);
-  
-  // Protejează toate rutele non-publice
-  const isPublicRoute = createRouteMatcher([
-  "/",
+ "/",
   "/products/(.*)",
   "/login(.*)",
   "/register(.*)",
@@ -23,12 +10,25 @@ export default clerkMiddleware(async (auth, request) => {
   "/api/categories(.*)",
   "/api/tags(.*)",
 ]);
-  // Protejează API-urile pentru metode non-GET
-  const isApiRoute = request.nextUrl.pathname.startsWith("/api/");
-  if (isApiRoute && request.method !== "GET") {
+
+export default clerkMiddleware(async (auth, request) => {
+  const { userId, sessionClaims } = await auth();
+  const isApi = request.nextUrl.pathname.startsWith("/api/");
+  const isMutation = request.method !== "GET";
+
+  if (isApi && isMutation) {
     if (!userId) {
       return NextResponse.json({ error: "Neautentificat" }, { status: 401 });
     }
+
+    const role = sessionClaims?.role as string;
+    if (role !== "admin") {
+      return NextResponse.json({ error: "Acces interzis" }, { status: 403 });
+    }
+  }
+
+  if (!isPublicRoute(request) && !userId) {
+    return NextResponse.json({ error: "Neautentificat" }, { status: 401 });
   }
 });
 
@@ -38,4 +38,3 @@ export const config = {
     "/(api|trpc)(.*)",
   ],
 };
-

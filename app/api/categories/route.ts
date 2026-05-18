@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-
+import { requireAdmin } from "@/lib/auth";
+import { categorySchema } from "@/lib/validations";
 
 export async function GET() {
   try {
@@ -18,14 +19,24 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const authError = await requireAdmin();
+  if (authError) return authError;
+
   try {
     const body = await request.json();
-    const { name, parentId } = body;
+
+    const parsed = categorySchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      );
+    }
 
     const category = await prisma.category.create({
       data: {
-        name,
-        parentId: parentId || null,
+        name: parsed.data.name,
+        parentId: parsed.data.parentId ?? null,
       },
     });
     return NextResponse.json(category, { status: 201 });

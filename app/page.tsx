@@ -9,7 +9,9 @@ export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const { userId, sessionClaims } = await auth();
-  const role = (sessionClaims?.metadata as { role?: string })?.role;
+  console.log("sessionClaims:", JSON.stringify(sessionClaims, null, 2));
+  const role = sessionClaims?.role as string;
+  console.log("role:", role);
   const user = userId ? await currentUser() : null;
 
 

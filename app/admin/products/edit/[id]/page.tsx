@@ -3,21 +3,12 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { productSchema as schema, type ProductFormData as FormData } from "@/lib/validations";
 import { useRouter, useParams } from "next/navigation";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { useEffect, useState } from "react";
 
-
-const schema = z.object({
-  name: z.string().min(1, "Numele este obligatoriu"),
-  price: z.coerce.number().min(1, "Prețul trebuie să fie mai mare ca 0"),
-  categoryId: z.coerce.number().min(1, "Selectează o categorie"),
-  tagIds: z.array(z.number()).optional(),
-});
-
-type FormData = z.infer<typeof schema>;
 
 type Category = {
   id: number;

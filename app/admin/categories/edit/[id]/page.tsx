@@ -3,16 +3,10 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { categorySchema as schema, type CategoryFormData as FormData } from "@/lib/validations";
 import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
-const schema = z.object({
-  name: z.string().min(1, "Numele este obligatoriu"),
-  parentId: z.coerce.number().optional(),
-});
-
-type FormData = z.infer<typeof schema>;
 
 type Category = {
   id: number;

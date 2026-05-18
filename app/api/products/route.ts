@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-
+import { requireAdmin } from "@/lib/auth";
+import { productSchema } from "@/lib/validations";
 
 export async function GET(request: Request) {
   try {
@@ -26,12 +27,13 @@ export async function GET(request: Request) {
     }
 
     if (search) {
-          where.OR = [
-            { name: { contains: search } },
-            { description: { contains: search } },
-            { category: { name: { contains: search } } },
-          ];
-        }
+      where.OR = [
+        { name: { contains: search } },
+        { description: { contains: search } },
+        { category: { name: { contains: search } } },
+      ];
+    }
+
     if (tagIds.length > 0) {
       where.AND = tagIds.map((id) => ({
         tags: { some: { id } },
@@ -78,19 +80,29 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const authError = await requireAdmin();
+  if (authError) return authError;
+
   try {
     const body = await request.json();
-    const { name, price, description, categoryId, tagIds, imageUrl} = body;
+
+    const parsed = productSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      );
+    }
 
     const product = await prisma.product.create({
       data: {
-        name,
-        price,
-        description,
-        categoryId,
-        imageUrl: imageUrl ?? null,
+        name: parsed.data.name,
+        price: parsed.data.price,
+        description: parsed.data.description,
+        categoryId: parsed.data.categoryId,
+        imageUrl: parsed.data.imageUrl ?? null,
         tags: {
-          connect: tagIds?.map((id: number) => ({ id })) || [],
+          connect: parsed.data.tagIds?.map((id) => ({ id })) || [],
         },
       },
       include: {
