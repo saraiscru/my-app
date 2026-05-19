@@ -47,21 +47,20 @@ export async function GET(request: Request) {
       };
     }
 
-    const products = await prisma.product.findMany({
-      where,
-      include: { category: true, tags: true },
-      orderBy: { [safeSortBy]: sortOrder },
-      skip: (page - 1) * limit,
-      take: limit,
-    });
-
-    const total = await prisma.product.count({ where });
-
-    const priceAggregate = await prisma.product.aggregate({
-      _min: { price: true },
-      _max: { price: true },
-    });
-
+    const [products, total, priceAggregate] = await Promise.all([
+  prisma.product.findMany({
+    where,
+    include: { category: true, tags: true },
+    orderBy: { [safeSortBy]: sortOrder },
+    skip: (page - 1) * limit,
+    take: limit,
+  }),
+  prisma.product.count({ where }),
+  prisma.product.aggregate({
+    _min: { price: true },
+    _max: { price: true },
+  }),
+]);
     return NextResponse.json({
       products,
       total,

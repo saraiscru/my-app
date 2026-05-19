@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
+
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -54,27 +56,30 @@ export default async function ProductPage({ params }: Props) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
             {/* Imagine */}
             <div className="h-80 md:h-full bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center p-8">
-              {product.imageUrl ? (
-                <img
-                  src={product.imageUrl}
-                  alt={product.name}
-                  className="w-full h-full object-contain"
-                />
-              ) : (
+            {product.imageUrl ? (
+              <Image
+                src={product.imageUrl}
+                alt={product.name}
+                fill
+                className="object-contain p-8"
+              />
+            ) : (
+              <div className="h-full flex items-center justify-center">
                 <span className="text-9xl">
                   {product.category.name === "Smartphone-uri" ? "📱" :
-                   product.category.name === "Tablete" ? "📟" :
-                   product.category.name === "Laptopuri" ? "💻" :
-                   product.category.name === "Desktop-uri" ? "🖥️" :
-                   product.category.name === "Televizoare" ? "📺" :
-                   product.category.name === "Căști" ? "🎧" :
-                   product.category.name === "Console" ? "🎮" :
-                   product.category.name === "Accesorii Gaming" ? "🕹️" :
-                   product.category.name === "Frigidere" ? "🧊" :
-                   product.category.name === "Mașini de spălat" ? "🫧" : "📦"}
+                  product.category.name === "Tablete" ? "📟" :
+                  product.category.name === "Laptopuri" ? "💻" :
+                  product.category.name === "Desktop-uri" ? "🖥️" :
+                  product.category.name === "Televizoare" ? "📺" :
+                  product.category.name === "Căști" ? "🎧" :
+                  product.category.name === "Console" ? "🎮" :
+                  product.category.name === "Accesorii Gaming" ? "🕹️" :
+                  product.category.name === "Frigidere" ? "🧊" :
+                  product.category.name === "Mașini de spălat" ? "🫧" : "📦"}
                 </span>
-              )}
-            </div>
+              </div>
+            )}
+          </div>
 
               {/* Detalii */}
               <div className="p-8 flex flex-col gap-6">

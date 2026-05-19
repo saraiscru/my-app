@@ -5,13 +5,9 @@ import { UserButton } from "@clerk/nextjs";
 
 const ProductList = lazy(() => import("./components/ProductList"));
 
-export const dynamic = "force-dynamic";
-
 export default async function Home() {
   const { userId, sessionClaims } = await auth();
-  console.log("sessionClaims:", JSON.stringify(sessionClaims, null, 2));
   const role = sessionClaims?.role as string;
-  console.log("role:", role);
   const user = userId ? await currentUser() : null;
 
 

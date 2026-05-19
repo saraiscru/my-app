@@ -1,6 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Image from "next/image";
+
 
 type Tag = {
   id: number;
@@ -41,20 +43,27 @@ export default function ProductCard({ product }: { product: Product }) {
     <div className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 hover:-translate-y-1">
       <div className="h-48 bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center overflow-hidden">
         {product.imageUrl ? (
-          <img src={product.imageUrl} alt={product.name} className="w-full h-full object-contain p-2" />
+         <Image
+            src={product.imageUrl}
+            alt={product.name}
+            fill
+            className="object-contain p-2"
+          />
         ) : (
-          <span className="text-6xl">
-            {product.category.name === "Smartphone-uri" ? "📱" :
-             product.category.name === "Tablete" ? "📟" :
-             product.category.name === "Laptopuri" ? "💻" :
-             product.category.name === "Desktop-uri" ? "🖥️" :
-             product.category.name === "Televizoare" ? "📺" :
-             product.category.name === "Căști" ? "🎧" :
-             product.category.name === "Console" ? "🎮" :
-             product.category.name === "Accesorii Gaming" ? "🕹️" :
-             product.category.name === "Frigidere" ? "🧊" :
-             product.category.name === "Mașini de spălat" ? "🫧" : "📦"}
-          </span>
+          <div className="h-full flex items-center justify-center">
+            <span className="text-6xl">
+              {product.category.name === "Smartphone-uri" ? "📱" :
+              product.category.name === "Tablete" ? "📟" :
+              product.category.name === "Laptopuri" ? "💻" :
+              product.category.name === "Desktop-uri" ? "🖥️" :
+              product.category.name === "Televizoare" ? "📺" :
+              product.category.name === "Căști" ? "🎧" :
+              product.category.name === "Console" ? "🎮" :
+              product.category.name === "Accesorii Gaming" ? "🕹️" :
+              product.category.name === "Frigidere" ? "🧊" :
+              product.category.name === "Mașini de spălat" ? "🫧" : "📦"}
+            </span>
+          </div>
         )}
       </div>
       <div className="p-4">
