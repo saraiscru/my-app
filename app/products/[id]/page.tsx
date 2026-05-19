@@ -55,7 +55,7 @@ export default async function ProductPage({ params }: Props) {
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
             {/* Imagine */}
-            <div className="h-80 md:h-full bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center p-8">
+            <div className="relative h-80 md:h-full min-h-[320px] bg-gradient-to-br from-blue-50 to-purple-50 overflow-hidden">
             {product.imageUrl ? (
               <Image
                 src={product.imageUrl}

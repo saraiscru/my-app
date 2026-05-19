@@ -41,7 +41,7 @@ export default function ProductCard({ product }: { product: Product }) {
 
   return (
     <div className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 hover:-translate-y-1">
-      <div className="h-48 bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center overflow-hidden">
+      <div className="relative h-48 bg-gradient-to-br from-blue-50 to-purple-50 overflow-hidden">
         {product.imageUrl ? (
          <Image
             src={product.imageUrl}

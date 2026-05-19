@@ -19,7 +19,7 @@ async function main() {
   const casti = await prisma.category.create({ data: { name: "Căști", parentId: tvAudio.id } });
 
   const gaming = await prisma.category.create({ data: { name: "Gaming", parentId: electronice.id } });
-  const console = await prisma.category.create({ data: { name: "Console", parentId: gaming.id } });
+  const consoleGaming = await prisma.category.create({ data: { name: "Console", parentId: gaming.id } });
   const accGaming = await prisma.category.create({ data: { name: "Accesorii Gaming", parentId: gaming.id } });
 
   const electrocasnice = await prisma.category.create({ data: { name: "Electrocasnice", parentId: electronice.id } });
@@ -108,16 +108,16 @@ async function main() {
   await prisma.product.create({ data: { name: "Sennheiser Momentum 4", price: 1399, description: "Sunet audiofil, ANC, autonomie 60 ore, pliabile.", categoryId: casti.id, tags: { connect: [{ id: premium.id }, { id: popular.id }] } } });
 
   // CONSOLE (10: 3 Sony, 3 Microsoft, 3 Nintendo, 1 altul)
-  await prisma.product.create({ data: { name: "PlayStation 5 Slim 1TB", price: 2199, description: "SSD ultra-rapid, ray tracing, controller DualSense.", categoryId: console.id, tags: { connect: [{ id: gamingTag.id }, { id: topVanzari.id }, { id: popular.id }] } } });
-  await prisma.product.create({ data: { name: "PlayStation 5 Digital 1TB", price: 1899, description: "Fara unitate optica, SSD NVMe, ray tracing.", categoryId: console.id, tags: { connect: [{ id: gamingTag.id }, { id: reducere.id }] } } });
-  await prisma.product.create({ data: { name: "PlayStation 4 Pro 1TB", price: 1299, description: "4K gaming, HDR, biblioteca uriasa de jocuri.", categoryId: console.id, tags: { connect: [{ id: gamingTag.id }, { id: reducere.id }, { id: topVanzari.id }] } } });
-  await prisma.product.create({ data: { name: "Xbox Series X 1TB", price: 2099, description: "12 teraflops, SSD NVMe, Game Pass Ultimate 3 luni.", categoryId: console.id, tags: { connect: [{ id: gamingTag.id }, { id: reducere.id }] } } });
-  await prisma.product.create({ data: { name: "Xbox Series S 512GB", price: 1299, description: "Gaming 1440p, 120fps, Game Pass inclus 1 luna.", categoryId: console.id, tags: { connect: [{ id: gamingTag.id }, { id: topVanzari.id }] } } });
-  await prisma.product.create({ data: { name: "Xbox One X 1TB", price: 999, description: "4K nativ, HDR, 6 teraflops, compatibil backwards.", categoryId: console.id, tags: { connect: [{ id: gamingTag.id }, { id: reducere.id }] } } });
-  await prisma.product.create({ data: { name: "Nintendo Switch OLED", price: 1599, description: "Ecran OLED 7 inch, dock TV, autonomie 9 ore.", categoryId: console.id, tags: { connect: [{ id: gamingTag.id }, { id: popular.id }] } } });
-  await prisma.product.create({ data: { name: "Nintendo Switch Lite", price: 999, description: "Consola portabila, 5 inch, autonomie 7 ore.", categoryId: console.id, tags: { connect: [{ id: gamingTag.id }, { id: topVanzari.id }] } } });
-  await prisma.product.create({ data: { name: "Nintendo Switch V2", price: 1299, description: "Versiune imbunatatita, autonomie 9 ore, dock inclus.", categoryId: console.id, tags: { connect: [{ id: gamingTag.id }, { id: reducere.id }] } } });
-  await prisma.product.create({ data: { name: "Steam Deck 512GB OLED", price: 2799, description: "PC gaming portabil, ecran OLED 7.4 inch, SteamOS.", categoryId: console.id, tags: { connect: [{ id: gamingTag.id }, { id: nou.id }, { id: stocLimitat.id }] } } });
+  await prisma.product.create({ data: { name: "PlayStation 5 Slim 1TB", price: 2199, description: "SSD ultra-rapid, ray tracing, controller DualSense.", categoryId: consoleGaming.id, tags: { connect: [{ id: gamingTag.id }, { id: topVanzari.id }, { id: popular.id }] } } });
+  await prisma.product.create({ data: { name: "PlayStation 5 Digital 1TB", price: 1899, description: "Fara unitate optica, SSD NVMe, ray tracing.", categoryId: consoleGaming.id, tags: { connect: [{ id: gamingTag.id }, { id: reducere.id }] } } });
+  await prisma.product.create({ data: { name: "PlayStation 4 Pro 1TB", price: 1299, description: "4K gaming, HDR, biblioteca uriasa de jocuri.", categoryId: consoleGaming.id, tags: { connect: [{ id: gamingTag.id }, { id: reducere.id }, { id: topVanzari.id }] } } });
+  await prisma.product.create({ data: { name: "Xbox Series X 1TB", price: 2099, description: "12 teraflops, SSD NVMe, Game Pass Ultimate 3 luni.", categoryId: consoleGaming.id, tags: { connect: [{ id: gamingTag.id }, { id: reducere.id }] } } });
+  await prisma.product.create({ data: { name: "Xbox Series S 512GB", price: 1299, description: "Gaming 1440p, 120fps, Game Pass inclus 1 luna.", categoryId: consoleGaming.id, tags: { connect: [{ id: gamingTag.id }, { id: topVanzari.id }] } } });
+  await prisma.product.create({ data: { name: "Xbox One X 1TB", price: 999, description: "4K nativ, HDR, 6 teraflops, compatibil backwards.", categoryId: consoleGaming.id, tags: { connect: [{ id: gamingTag.id }, { id: reducere.id }] } } });
+  await prisma.product.create({ data: { name: "Nintendo Switch OLED", price: 1599, description: "Ecran OLED 7 inch, dock TV, autonomie 9 ore.", categoryId: consoleGaming.id, tags: { connect: [{ id: gamingTag.id }, { id: popular.id }] } } });
+  await prisma.product.create({ data: { name: "Nintendo Switch Lite", price: 999, description: "Consola portabila, 5 inch, autonomie 7 ore.", categoryId: consoleGaming.id, tags: { connect: [{ id: gamingTag.id }, { id: topVanzari.id }] } } });
+  await prisma.product.create({ data: { name: "Nintendo Switch V2", price: 1299, description: "Versiune imbunatatita, autonomie 9 ore, dock inclus.", categoryId: consoleGaming.id, tags: { connect: [{ id: gamingTag.id }, { id: reducere.id }] } } });
+  await prisma.product.create({ data: { name: "Steam Deck 512GB OLED", price: 2799, description: "PC gaming portabil, ecran OLED 7.4 inch, SteamOS.", categoryId: consoleGaming.id, tags: { connect: [{ id: gamingTag.id }, { id: nou.id }, { id: stocLimitat.id }] } } });
 
   // ACCESORII GAMING (10)
   await prisma.product.create({ data: { name: "Razer DeathAdder V3 HyperSpeed", price: 499, description: "Mouse wireless, senzor Focus Pro 30K, 90 ore autonomie.", categoryId: accGaming.id, tags: { connect: [{ id: gamingTag.id }, { id: popular.id }] } } });
@@ -155,7 +155,7 @@ async function main() {
   await prisma.product.create({ data: { name: "Electrolux EW8F1490S 9kg 1400rpm", price: 2899, description: "UltraMix, SteamCare, perfectCare 800, clasa A.", categoryId: masiniSpalat.id, tags: { connect: [{ id: nou.id }, { id: reducere.id }] } } });
   await prisma.product.create({ data: { name: "Beko WUE8736XST 8kg 1400rpm", price: 1799, description: "SteamCure, AquaTech, ProSmart Motor, clasa A.", categoryId: masiniSpalat.id, tags: { connect: [{ id: reducere.id }, { id: topVanzari.id }] } } });
 
-  process.stdout.write("100 produse, 16 categorii si 7 taguri adaugate cu succes!\n");
+  console.log("100 produse, 16 categorii si 7 taguri adaugate cu succes!");
 }
 
 main()
